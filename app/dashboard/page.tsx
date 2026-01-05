@@ -10,7 +10,10 @@ import {
 } from "recharts";
 import { useEffect, useState } from "react";
 
-/* ------------------ DATA ------------------ */
+/* ================= ENV ================= */
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+/* ================= MOCK CHART DATA (UNCHANGED) ================= */
 
 // Revenue data (Blue)
 const revenueData = [
@@ -36,9 +39,28 @@ const userGrowthData = [
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
+  const [orgCount, setOrgCount] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
+
+    async function fetchOrganizations() {
+      try {
+        const res = await fetch(`${API_URL}/api/organizations`, {
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch");
+
+        const data = await res.json();
+        setOrgCount(Array.isArray(data) ? data.length : 0);
+      } catch {
+        setOrgCount(null);
+      }
+    }
+
+    fetchOrganizations();
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -48,28 +70,29 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
 
-{/* Header + Organization Context */}
-<div className="space-y-1">
-  <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
-    Analytics Overview
-  </h1>
+      {/* Header */}
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
+          Analytics Overview
+        </h1>
 
-  <div className="flex items-center gap-2 text-sm text-zinc-500">
-    <span className="font-medium text-zinc-700 dark:text-zinc-300">
-      AnkismaikT BizIntel
-    </span>
-    <span className="text-zinc-400">/</span>
-    <span>Default Workspace</span>
-  </div>
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            AnkismaikT BizIntel
+          </span>
+          <span className="text-zinc-400">/</span>
+          <span>Default Workspace</span>
+        </div>
 
-  <p className="text-sm text-zinc-500">
-    Revenue and user growth performance
-  </p>
-</div>
+        <p className="text-sm text-zinc-500">
+          Revenue and user growth performance
+        </p>
+      </div>
 
-      {/* ================= TOP METRICS ROW ================= */}
+      {/* ================= TOP METRICS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
+        {/* Revenue */}
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
           <p className="text-xs text-zinc-500">Total Revenue</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
@@ -80,6 +103,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Users (still mock) */}
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
           <p className="text-xs text-zinc-500">Active Users</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
@@ -90,16 +114,18 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {/* Organizations (REAL DATA) */}
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
           <p className="text-xs text-zinc-500">Organizations</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
-            38
+            {orgCount === null ? "—" : orgCount}
           </p>
           <p className="mt-1 text-xs text-zinc-500">
-            3 added recently
+            Live from backend
           </p>
         </div>
 
+        {/* System Health */}
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
           <p className="text-xs text-zinc-500">System Health</p>
           <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
@@ -111,9 +137,8 @@ export default function DashboardPage() {
         </div>
 
       </div>
-      {/* ================= END METRICS ================= */}
 
-      {/* Loading State */}
+      {/* ================= LOADING STATE ================= */}
       {loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {[1, 2].map((i) => (
@@ -125,7 +150,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* ================= EMPTY STATE ================= */}
       {!loading && !hasData && (
         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-10 text-center">
           <h2 className="text-sm font-medium text-zinc-900 dark:text-white">
@@ -137,7 +162,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Charts */}
+      {/* ================= CHARTS ================= */}
       {!loading && hasData && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
