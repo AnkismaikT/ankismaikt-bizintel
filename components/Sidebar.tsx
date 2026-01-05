@@ -1,102 +1,66 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const navItems = [
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Analytics", href: "/analytics" },
+  { name: "Users", href: "/users" },
+  { name: "Organizations", href: "/org" },
+  { name: "Settings", href: "/settings" },
+];
 
 export default function Sidebar() {
-  const router = useRouter();
   const pathname = usePathname();
 
-  const [userId, setUserId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const uid = localStorage.getItem("userId");
-
-    if (!uid) {
-      router.push("/login");
-      return;
-    }
-
-    setUserId(uid);
-    setMounted(true);
-  }, [router]);
-
-  const nav = [
-    { name: "Dashboard", path: "/dashboard" },
-    { name: "Modules", path: "/modules" },
-    { name: "Analytics", path: "/analytics" },
-  ];
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <aside
-      style={{
-        width: 240,
-        height: "100vh",
-        borderRight: "1px solid #e5e7eb",
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-      }}
-    >
-      {/* TOP */}
-      <div>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 24 }}>
-          Ankismaikt
-        </h2>
-
-        <nav>
-          {nav.map((item) => (
-            <div
-              key={item.path}
-              onClick={() => router.push(item.path)}
-              style={{
-                padding: "10px 12px",
-                marginBottom: 6,
-                cursor: "pointer",
-                borderRadius: 6,
-                background:
-                  pathname === item.path ? "#f3f4f6" : "transparent",
-                fontWeight: pathname === item.path ? 600 : 400,
-              }}
-            >
-              {item.name}
-            </div>
-          ))}
-        </nav>
+    <aside className="h-screen w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+      
+      {/* Brand */}
+      <div className="px-4 py-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">
+          AnkismaikT
+        </div>
+        <div className="text-xs text-zinc-500">
+          BizIntel
+        </div>
       </div>
 
-      {/* BOTTOM */}
-      <div>
-        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-          Signed in
-        </div>
-        <div style={{ fontSize: 14, marginBottom: 12 }}>
-          {userId.slice(0, 8)}
-        </div>
+      {/* Navigation */}
+      <nav className="flex-1 px-2 py-4 space-y-1">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
 
-        <button
-          onClick={() => {
-            localStorage.clear();
-            router.push("/login");
-          }}
-          style={{
-            width: "100%",
-            padding: 10,
-            borderRadius: 6,
-            border: "1px solid #e5e7eb",
-            background: "white",
-            cursor: "pointer",
-          }}
-        >
-          Logout
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`relative flex items-center rounded-md px-3 py-2 text-sm transition ${
+                isActive
+                  ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white font-medium"
+                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900"
+              }`}
+            >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r bg-blue-600" />
+              )}
+              <span className="ml-2">{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User Section */}
+      <div className="border-t border-zinc-200 dark:border-zinc-800 px-4 py-3">
+        <div className="text-sm font-medium text-zinc-900 dark:text-white">
+          Pradeep Kishan
+        </div>
+        <button className="mt-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+          Sign out
         </button>
       </div>
+
     </aside>
   );
 }

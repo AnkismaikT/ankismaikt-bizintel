@@ -1,55 +1,194 @@
 "use client";
 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+
+/* ------------------ DATA ------------------ */
+
+// Revenue data (Blue)
+const revenueData = [
+  { name: "Mon", value: 120 },
+  { name: "Tue", value: 210 },
+  { name: "Wed", value: 180 },
+  { name: "Thu", value: 260 },
+  { name: "Fri", value: 320 },
+  { name: "Sat", value: 280 },
+  { name: "Sun", value: 350 },
+];
+
+// User growth data (Green)
+const userGrowthData = [
+  { name: "Mon", value: 12 },
+  { name: "Tue", value: 18 },
+  { name: "Wed", value: 22 },
+  { name: "Thu", value: 30 },
+  { name: "Fri", value: 35 },
+  { name: "Sat", value: 42 },
+  { name: "Sun", value: 48 },
+];
 
 export default function DashboardPage() {
-  const router = useRouter();
-
-  const [userId, setUserId] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const uid = localStorage.getItem("userId");
-    const oid = localStorage.getItem("organizationId");
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
-    if (!uid) {
-      router.push("/login");
-      return;
-    }
-
-    if (!oid) {
-      router.push("/org");
-      return;
-    }
-
-    setUserId(uid);
-    setOrgId(oid);
-    setMounted(true);
-  }, [router]);
-
-  if (!mounted) {
-    return <p style={{ padding: 40 }}>Loading dashboard...</p>;
-  }
+  const hasData =
+    revenueData.length > 0 && userGrowthData.length > 0;
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 28, marginBottom: 12 }}>
-        Dashboard
-      </h1>
+    <div className="p-6 space-y-6">
 
-      <p>
-        You are now inside your organization workspace.
-      </p>
+{/* Header + Organization Context */}
+<div className="space-y-1">
+  <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
+    Analytics Overview
+  </h1>
 
-      <p style={{ marginTop: 20 }}>
-        <strong>User ID:</strong> {userId}
-      </p>
+  <div className="flex items-center gap-2 text-sm text-zinc-500">
+    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+      AnkismaikT BizIntel
+    </span>
+    <span className="text-zinc-400">/</span>
+    <span>Default Workspace</span>
+  </div>
 
-      <p>
-        <strong>Organization ID:</strong> {orgId}
-      </p>
+  <p className="text-sm text-zinc-500">
+    Revenue and user growth performance
+  </p>
+</div>
+
+      {/* ================= TOP METRICS ROW ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
+          <p className="text-xs text-zinc-500">Total Revenue</p>
+          <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+            ₹12.4L
+          </p>
+          <p className="mt-1 text-xs text-blue-600">
+            +12% this week
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
+          <p className="text-xs text-zinc-500">Active Users</p>
+          <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+            1,248
+          </p>
+          <p className="mt-1 text-xs text-green-600">
+            +84 new users
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
+          <p className="text-xs text-zinc-500">Organizations</p>
+          <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+            38
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            3 added recently
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
+          <p className="text-xs text-zinc-500">System Health</p>
+          <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-white">
+            99.9%
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Uptime
+          </p>
+        </div>
+
+      </div>
+      {/* ================= END METRICS ================= */}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-72 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 animate-pulse"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !hasData && (
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-10 text-center">
+          <h2 className="text-sm font-medium text-zinc-900 dark:text-white">
+            No analytics data yet
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Data will appear here once activity starts.
+          </p>
+        </div>
+      )}
+
+      {/* Charts */}
+      {!loading && hasData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Revenue Chart */}
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+            <h2 className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Revenue Trend
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={revenueData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#2563eb"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* User Growth Chart */}
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-sm">
+            <h2 className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              User Growth
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={userGrowthData}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#16a34a"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </div>
+      )}
     </div>
   );
 }
