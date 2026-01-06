@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  // ✅ HARD GUARD: DO NOT SHOW LOGIN IF ALREADY LOGGED IN
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      router.replace("/dashboard");
+      return;
+    }
+    setChecking(false);
+  }, [router]);
+
+  // ⛔ prevent login UI from flashing
+  if (checking) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,11 +45,9 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      // ✅ Save user session (Phase-1 simple auth)
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("email", data.email);
 
-      // ✅ Redirect to dashboard
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Login failed");
