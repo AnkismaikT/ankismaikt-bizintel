@@ -5,9 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },
-  { name: "Analytics", href: "/analytics" },
-  { name: "Users", href: "/org/users" },
   { name: "Organizations", href: "/org" },
+  { name: "Users", href: "/users" },
+  { name: "Analytics", href: "/analytics" },
   { name: "Settings", href: "/settings" },
 ];
 
@@ -22,12 +22,15 @@ export default function Sidebar() {
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      
       {/* Brand */}
       <div className="border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
         <div className="text-lg font-semibold text-zinc-900 dark:text-white">
           AnkismaikT
         </div>
-        <div className="text-xs text-zinc-500">BizIntel</div>
+        <div className="text-xs text-zinc-500">
+          BizIntel
+        </div>
       </div>
 
       {/* Navigation */}
@@ -70,6 +73,7 @@ export default function Sidebar() {
           Sign out
         </button>
       </div>
+
     </aside>
   );
 }
