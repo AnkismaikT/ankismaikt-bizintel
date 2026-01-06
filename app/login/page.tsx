@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -10,61 +12,74 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3001/login", {
+      const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error("Invalid email or password");
       }
 
+      const data = await res.json();
+
+      // ✅ Save user session (Phase-1 simple auth)
       localStorage.setItem("userId", data.userId);
-      router.push("/org");
+      localStorage.setItem("email", data.email);
+
+      // ✅ Redirect to dashboard
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <form onSubmit={handleLogin} style={{ width: 320 }}>
-        <h1 style={{ fontSize: 24, marginBottom: 20 }}>Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-sm bg-white border rounded p-6 space-y-4"
+      >
+        <h1 className="text-xl font-semibold text-center">Login</h1>
+
+        {error && (
+          <p className="text-sm text-red-600 text-center">{error}</p>
+        )}
 
         <input
           type="email"
-          placeholder="you@company.com"
+          placeholder="Email"
+          className="w-full border rounded px-3 py-2"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ width: "100%", padding: 10, marginBottom: 12 }}
         />
 
         <input
           type="password"
           placeholder="Password"
+          className="w-full border rounded px-3 py-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ width: "100%", padding: 10, marginBottom: 12 }}
         />
 
-        <button type="submit" disabled={loading} style={{ width: "100%", padding: 10 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-black text-white rounded py-2 disabled:opacity-50"
+        >
           {loading ? "Logging in..." : "Login"}
         </button>
-
-        {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
       </form>
     </div>
   );
