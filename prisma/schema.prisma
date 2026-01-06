@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * 👤 USER
+ * Global identity (can belong to many orgs)
+ */
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  password             String
+  name                 String?
+  activeOrganizationId String?   // 👈 CURRENT WORKING ORG
+
+  memberships          Membership[]
+  ownedOrganizations   Organization[] @relation("OrgOwner")
+
+  createdAt            DateTime @default(now())
+}
+
+/**
+ * 🏢 ORGANIZATION
+ * Tenant / workspace
+ */
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+
+  ownerId   String
+  owner     User     @relation("OrgOwner", fields: [ownerId], references: [id])
+
+  members   Membership[]
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * 👥 MEMBERSHIP
+ * Join table between User and Organization
+ */
+model Membership {
+  id             String   @id @default(cuid())
+
+  userId         String
+  organizationId String
+  role           Role
+
+  user           User         @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, organizationId])
+}
+
+/**
+ * 🔐 ROLE ENUM
+ */
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
