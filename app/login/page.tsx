@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // 🔒 redirect if already logged in
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (userId) {
@@ -20,57 +13,53 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const res = await fetch(`${API_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-      setError("Invalid email or password");
-      setLoading(false);
-      return;
-    }
-
-    const data = await res.json();
-    localStorage.setItem("userId", data.userId);
-    router.replace("/dashboard");
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleLogin} className="border p-6 rounded w-80 space-y-4">
-        <h1 className="text-xl font-semibold text-center">Login</h1>
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50">
+      <div className="w-full max-w-sm rounded border bg-white p-6 shadow">
+        <h1 className="mb-4 text-center text-xl font-semibold">Login</h1>
 
-        <input
-          className="border w-full p-2"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const email = (e.currentTarget.email as HTMLInputElement).value;
+            const password = (e.currentTarget.password as HTMLInputElement).value;
 
-        <input
-          className="border w-full p-2"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/login`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+              }
+            );
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+            const data = await res.json();
 
-        <button
-          className="w-full bg-black text-white p-2"
-          disabled={loading}
+            if (data.userId) {
+              localStorage.setItem("userId", data.userId);
+              localStorage.setItem("userName", data.name || "");
+              router.replace("/dashboard");
+            } else {
+              alert("Invalid credentials");
+            }
+          }}
         >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          <input
+            name="email"
+            placeholder="Email"
+            className="mb-3 w-full rounded border px-3 py-2"
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            className="mb-4 w-full rounded border px-3 py-2"
+          />
+          <button className="w-full rounded bg-black py-2 text-white">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
