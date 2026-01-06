@@ -34,30 +34,40 @@ const userGrowthData = [
 ];
 
 export default function DashboardPage() {
-  const [orgCount, setOrgCount] = useState<number>(0);
+  const [orgCount, setOrgCount] = useState(0);
+  const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  /* -------------------- FETCH ORGANIZATIONS -------------------- */
+  /* -------------------- FETCH DASHBOARD STATS -------------------- */
   useEffect(() => {
     if (!API_URL) {
       setLoading(false);
       return;
     }
 
-    const fetchOrganizations = async () => {
+    const fetchStats = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/organizations`);
-        const data = await res.json();
-        setOrgCount(Array.isArray(data) ? data.length : 0);
-      } catch (error) {
-        console.error("Failed to fetch organizations", error);
+        const [orgRes, userRes] = await Promise.all([
+          fetch(`${API_URL}/api/organizations`),
+          fetch(`${API_URL}/api/users`).catch(() => null), // safe if API not ready
+        ]);
+
+        const orgData = orgRes.ok ? await orgRes.json() : [];
+        const userData =
+          userRes && userRes.ok ? await userRes.json() : [];
+
+        setOrgCount(Array.isArray(orgData) ? orgData.length : 0);
+        setUserCount(Array.isArray(userData) ? userData.length : 0);
+      } catch (err) {
+        console.error("Dashboard stats error", err);
         setOrgCount(0);
+        setUserCount(0);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrganizations();
+    fetchStats();
   }, []);
 
   return (
@@ -70,6 +80,13 @@ export default function DashboardPage() {
           <p className="text-xs text-zinc-500">Organizations</p>
           <p className="text-2xl font-semibold">
             {loading ? "—" : orgCount}
+          </p>
+        </div>
+
+        <div className="border rounded p-4">
+          <p className="text-xs text-zinc-500">Users</p>
+          <p className="text-2xl font-semibold">
+            {loading ? "—" : userCount}
           </p>
         </div>
       </div>
