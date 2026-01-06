@@ -1,60 +1,58 @@
 import { prisma } from "../prisma";
 import { requireRole } from "../authz/requireRole";
-import { Role } from "@prisma/client";
 
 export async function inviteUserToOrganization(params: {
   inviterId: string;
   organizationId: string;
   email: string;
-  role?: Role;
 }) {
-  const { inviterId, organizationId, email, role = "MEMBER" } = params;
+  const { inviterId, organizationId, email } = params;
 
-  // 1. Authorization: only OWNER or ADMIN can invite
-  await requireRole(inviterId, organizationId, ["OWNER", "ADMIN"]);
+  // 🔒 Only OWNER can invite users (V1 rule)
+  await requireRole(inviterId, organizationId, ["OWNER"]);
 
-  // 2. Check if user exists
-  const user = await prisma.user.findUnique({
+  // 🔒 Prevent duplicate pending invite
+  const existingInvite = await prisma.organizationInvite.findFirst({
+    where: {
+      email,
+      organizationId,
+      status: "PENDING",
+    },
+  });
+
+  if (existingInvite) {
+    throw new Error("Invite already sent to this email");
+  }
+
+  // 🔒 Prevent inviting existing member
+  const existingUser = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (!user) {
-    throw new Error("User with this email does not exist");
+  if (existingUser) {
+    const existingMembership =
+      await prisma.organizationMember.findFirst({
+        where: {
+          userId: existingUser.id,
+          organizationId,
+        },
+      });
+
+    if (existingMembership) {
+      throw new Error("User is already a member of this organization");
+    }
   }
 
-  // 3. Prevent duplicate membership
-  const existingMembership = await prisma.membership.findUnique({
-    where: {
-      userId_organizationId: {
-        userId: user.id,
-        organizationId,
-      },
-    },
-  });
-
-  if (existingMembership) {
-    throw new Error("User is already a member of this organization");
-  }
-
-  // 4. Create membership
-  const membership = await prisma.membership.create({
+  // ✅ Create PENDING invite (NO membership yet)
+  const invite = await prisma.organizationInvite.create({
     data: {
-      userId: user.id,
+      email,
       organizationId,
-      role,
+      invitedByUserId: inviterId,
+      status: "PENDING",
     },
   });
 
-  // 5. Auto-set active organization if not already set
-  if (!user.activeOrganizationId) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        activeOrganizationId: organizationId,
-      },
-    });
-  }
-
-  return membership;
+  return invite;
 }
 
