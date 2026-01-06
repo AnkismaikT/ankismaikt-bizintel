@@ -1,18 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },
-  { name: "Analytics", href: "/analytics" },
-  { name: "Users", href: "/users" },
+  { name: "Analytics", href: "/dashboard" },
+  { name: "Users", href: "/org/users" },
   { name: "Organizations", href: "/org" },
-  { name: "Settings", href: "/settings" },
+  { name: "Settings", href: "/org/settings" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    // 1️⃣ clear login state
+    localStorage.removeItem("userId");
+
+    // 2️⃣ redirect to login
+    router.push("/login");
+  }
 
   return (
     <aside className="h-screen w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
@@ -30,7 +39,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname.startsWith(item.href);
 
           return (
             <Link
@@ -56,7 +65,11 @@ export default function Sidebar() {
         <div className="text-sm font-medium text-zinc-900 dark:text-white">
           Pradeep Kishan
         </div>
-        <button className="mt-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+
+        <button
+          onClick={handleLogout}
+          className="mt-1 text-xs text-zinc-500 hover:text-red-600"
+        >
           Sign out
         </button>
       </div>
