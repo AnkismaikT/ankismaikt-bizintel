@@ -22,14 +22,18 @@ app.get("/health", async () => {
   return { status: "ok" };
 });
 
-// ✅ REGISTER ROUTES
+// Register routes
 await app.register(authRoutes);
 await app.register(organizationRoutes);
 await app.register(inviteRoutes);
 
-// Start server
+// 🔑 IMPORTANT: Bind to Render PORT
+const PORT = Number(process.env.PORT) || 3001;
+
 await app.listen({
-  port: 3001,
+  port: PORT,
   host: "0.0.0.0",
 });
+
+console.log(`🚀 Server running on port ${PORT}`);
 
