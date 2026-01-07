@@ -20,6 +20,7 @@ model User {
 
   memberships          Membership[]
   ownedOrganizations   Organization[] @relation("OrgOwner")
+  sessions             Session[]   // ✅ REQUIRED FOR PRISMA
 
   createdAt            DateTime @default(now())
 }
@@ -80,5 +81,16 @@ model Invite {
   status         String   @default("pending") // pending | accepted
 
   createdAt      DateTime @default(now())
+}
+
+/**
+ * 🧠 SESSION (AUTH)
+ */
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 

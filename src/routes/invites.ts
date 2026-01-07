@@ -1,10 +1,15 @@
+import { requireAuth } from "../auth/middleware";
 import { FastifyInstance } from "fastify";
 import { prisma } from "../prisma";
 
 export async function inviteRoutes(app: FastifyInstance) {
 
   // CREATE INVITE
-  app.post("/api/invites", async (req, reply) => {
+app.post(
+  "/api/invites",
+  { preHandler: requireAuth },
+  async (req, reply) => {
+
     const { email, organizationId } = req.body as {
       email?: string;
       organizationId?: string;
@@ -18,6 +23,37 @@ export async function inviteRoutes(app: FastifyInstance) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return reply.status(400).send({ error: "Invalid email" });
+    }
+
+    // ❌ ALREADY INVITED (PENDING)
+    const existingInvite = await prisma.invite.findFirst({
+      where: {
+        email,
+        organizationId,
+        status: "pending",
+      },
+    });
+
+    if (existingInvite) {
+      return reply.status(409).send({
+        error: "Invite already sent",
+      });
+    }
+
+    // ❌ ALREADY A MEMBER
+    const existingMember = await prisma.membership.findFirst({
+      where: {
+        organizationId,
+        user: {
+          email,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return reply.status(409).send({
+        error: "User already a member",
+      });
     }
 
     const invite = await prisma.invite.create({
