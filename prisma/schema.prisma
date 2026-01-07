@@ -68,3 +68,17 @@ enum Role {
   MEMBER
 }
 
+/**
+ * ✉️ INVITE
+ * Pending organization invitations
+ */
+model Invite {
+  id             String   @id @default(cuid())
+  email          String
+  organizationId String
+  role           Role     @default(MEMBER)
+  status         String   @default("pending") // pending | accepted
+
+  createdAt      DateTime @default(now())
+}
+

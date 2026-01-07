@@ -1,18 +1,26 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { organizationRoutes } from "./organizations/routes";
+
+import { organizationRoutes } from "./routes/organizations";
+import { inviteRoutes } from "./routes/invites";
 
 const app = Fastify({ logger: true });
 
+// Enable CORS
 await app.register(cors, { origin: true });
 
-// ✅ REGISTER ORGANIZATION ROUTES (THIS WAS MISSING)
+// ✅ REGISTER ROUTES (CRITICAL)
 await app.register(organizationRoutes);
+await app.register(inviteRoutes);
 
-// optional health
+// Health check
 app.get("/health", async () => {
   return { status: "ok" };
 });
 
-await app.listen({ port: 3001, host: "0.0.0.0" });
+// Start server
+await app.listen({
+  port: 3001,
+  host: "0.0.0.0",
+});
 
