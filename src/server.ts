@@ -22,6 +22,11 @@ app.get("/health", async () => {
   return { status: "ok" };
 });
 
+// Root route (prevents 404 on /)
+app.get("/", async () => {
+  return { message: "BizIntel API is running 🚀" };
+});
+
 // Register routes
 await app.register(authRoutes);
 await app.register(organizationRoutes);
